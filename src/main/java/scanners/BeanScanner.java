@@ -1,19 +1,20 @@
 package scanners;
 
-import annotations.loader.AnnotationsScanner;
 import org.reflections.Reflections;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 
 public class BeanScanner {
-    public static Set<Class> getAllAnnotatedClasses() {
-        Reflections ref = new Reflections("service");
+    public static List<Class> getAllAnnotatedClasses() {
+        Reflections ref = new Reflections("");
         Set<Class<? extends Annotation>> annotations = AnnotationsScanner.getAnnotations();
-        Set<Class> annotatedBeansSet = new TreeSet<>();
+        List<Class> annotatedBeansSet = new ArrayList<>();
+        //TODO implement set instead of list
         annotations.forEach(annotation ->
-            annotatedBeansSet.addAll(ref.getTypesAnnotatedWith(annotation))
+            annotatedBeansSet.addAll(ref.getTypesAnnotatedWith(annotation, true))
         );
         return annotatedBeansSet;
     }
