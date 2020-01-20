@@ -12,7 +12,7 @@ public class DynamicInvocationHandler implements InvocationHandler {
     public Object invoke(Object proxy, Method method, Object[] args)
             throws Throwable {
         System.out.println("pppppppp");
-        return 42;
+        return "ssss";
     }
 
 

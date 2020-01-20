@@ -13,11 +13,11 @@ public class BeanInjector {
         BeanPool.getBeans().forEach(bean -> {
             AnnotationsScanner.getAnnotations().forEach(annotation -> {
                 Field[] annotatedDeclaredFields = AnnotatedFieldsScanner
-                        .getAnnotatedDeclaredFields(annotation, Injected.class);
+                        .getAnnotatedDeclaredFields(bean.getClass(), Injected.class);
                 for (Field field : annotatedDeclaredFields) {
                     try {
                         field.setAccessible(true);
-                        field.set(bean, BeanPool.getByKey(field.getType().getName()));
+                        field.set(bean, BeanPool.getByKey(field.getType().getSimpleName()));
                     } catch (IllegalAccessException e) {
                         throw new RuntimeException("Injection in field " + field.getName()
                                 + " bean " + bean.getClass() + " was failed");

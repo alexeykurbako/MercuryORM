@@ -10,6 +10,7 @@ public class UserService {
     private UserRepository userRepository;
 
     public void sssss() {
-        System.out.println("feefefefefe");
+
+       userRepository.getStringById(1L);
     }
 }

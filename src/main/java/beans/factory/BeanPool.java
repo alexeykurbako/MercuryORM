@@ -23,4 +23,8 @@ public class BeanPool {
     public static void put(String key, Object value) {
         stringBeanMap.put(key, value);
     }
+
+    public static Map<String, Object> getStringBeanMap() {
+        return stringBeanMap;
+    }
 }

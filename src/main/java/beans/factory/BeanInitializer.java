@@ -25,7 +25,7 @@ public class BeanInitializer {
                    throw new RuntimeException("Bean initialization crash");
                 }
             }
-            BeanPool.put(clazz.getName(), instance);
+            BeanPool.put(clazz.getSimpleName(), instance);
         });
 
     }
