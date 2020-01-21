@@ -1,10 +1,11 @@
 package service;
 
+import annotations.Bean;
 import annotations.Injected;
 import annotations.Service;
 import repository.UserRepository;
 
-@Service
+@Bean
 public class UserService {
     @Injected
     private UserRepository userRepository;
