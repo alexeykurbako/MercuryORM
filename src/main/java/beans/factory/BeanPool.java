@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 public class BeanPool {
     private static Map<String, Object> stringBeanMap = new HashMap<>();
 
-    static Object getByKey(String key) {
+    public static Object getByKey(String key) {
         return stringBeanMap.get(key);
     }
 
@@ -24,7 +24,7 @@ public class BeanPool {
         stringBeanMap.put(key, value);
     }
 
-    static Map<String, Object> getStringBeanMap() {
+    public static Map<String, Object> getStringBeanMap() {
         return stringBeanMap;
     }
 }
