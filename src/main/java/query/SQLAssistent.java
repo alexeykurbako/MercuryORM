@@ -1,23 +1,27 @@
 package query;
 
 import demo.src.DAO.query.exceptions.FieldNotFoundException;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-
-enum QueryType {
-    SELECT, UPDATE, INSERT, DELETE
-}
-
-enum SubselectType {
-    GROUP, SORT
-}
 
 
 public class SQLAssistent<T> {
+    private enum QueryType {
+        SELECT, UPDATE, INSERT, DELETE
+    }
+
+    private enum SubselectType {
+        GROUP, SORT
+    }
+
+    private String[] OPERATIONS = {"GET", "FIND", "UPDATE", "EDIT", "INSERT", "ADD", "DELETE", "REMOVE"};
+
     private static final String AND_SEPARATOR = "And";
     private static final String BY_SEPARATOR = "By";
 
@@ -58,29 +62,43 @@ public class SQLAssistent<T> {
         query.append(" ");
     }
 
-    public Map<String, String> transformMethodNameToQueryParts(Method method, List<Object> queryParams) throws ClassNotFoundException {
-        Map<String, String> queryParts = new HashMap<>();
+    private boolean isOperation(String operationForCheck) {
+        return Arrays.stream(OPERATIONS)
+                .anyMatch((operation) -> operationForCheck.toUpperCase().equals(operation));
+    }
+
+    private String getLastOperation(String[] words, int currentIndex) {
+        for(int i = currentIndex; i >= 0; i--) {
+            if(isOperation(words[i]))
+                return words[i];
+        }
+        throw new RuntimeException("Operation doesn't exist");
+    }
+
+    public List<Pair<String, String>> transformMethodNameToQueryParts(Method method, List<Object> queryParams) {
+        List<Pair<String, String>> queryParts = new ArrayList<>();
 
         String[] words = method.getName().split("(?=[A-Z])");
+        Class returnType = method.getReturnType();
+        QueryType queryType = defineQueryType(words[0]);
 
-//        QueryType type = defineQueryType(words[0]);
-//        Class entityType = Class.forName(words[1]);
 //        Field[] existingEntityFields = entityType.getFields();
 //        queryParts.put(type.name(), entityType.getName());
-        queryParts.put("SELECT", "User");
+
+        queryParts.add(new ImmutablePair<>(queryType.name(), returnType.getSimpleName()));
         if (words.length > 2) {
-            for (int i = 2; i < words.length; i++) {
+            for (int i = 1; i < words.length; i++) {
                 String part = words[i];
                 //TODO check are operation name and field exist
-                if (part.equals(AND_SEPARATOR)) {
-                    String operation = SQLConstants.WHERE;
-                    String field = words[i + 1];
-                    queryParts.put(operation, field);
-                }
                 if (part.equals(BY_SEPARATOR)) {
                     String operation = words[i - 1];
                     String field = words[i + 1];
-                    queryParts.put(operation, field);
+                    queryParts.add(new ImmutablePair<>(operation, field));
+                }
+                if (part.equals(AND_SEPARATOR)) {
+                    String operation = getLastOperation(words, i);
+                    String field = words[i + 1];
+                    queryParts.add(new ImmutablePair<>(operation, field));
                 }
             }
         }
@@ -88,8 +106,12 @@ public class SQLAssistent<T> {
         return queryParts;
     }
 
+    public String buildSqlQuery() {
+
+    }
+
     //Generics: Long, User
-//User find User By Id Group By Date Sort By Age(Long Id);
+//User find User By  Id Group By Date Sort By Age(Long Id);
 //SELECT: USER
 //WHERE: ID
 //GROUP: DATE

@@ -29,7 +29,7 @@ public class DynamicInvocationHandler implements InvocationHandler {
 
         Class base = baseRepositories.get(0);
 
-        Type[] genericInterfaces = method.getDeclaringClass().getGenericInterfaces();l;
+        Type[] genericInterfaces = method.getDeclaringClass().getGenericInterfaces();
         Type[] genericTypes = null;
         for (Type genericInterface : genericInterfaces) {
             if (genericInterface instanceof ParameterizedType) {
@@ -41,11 +41,9 @@ public class DynamicInvocationHandler implements InvocationHandler {
         Type entityType = genericTypes[0];
         Type primaryKeyType = genericTypes[1];
 
-
-
         SQLAssistent sqlAssistent = new SQLAssistent();
         sqlAssistent.transformMethodNameToQueryParts(method, Arrays.asList(args));
-        sqlAssistent.buildQuery(entityType, primaryKeyType,)
+        sqlAssistent.buildSqlQuery(entityType, primaryKeyType,);
         return "ssss";
     }
 

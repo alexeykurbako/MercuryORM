@@ -1,8 +1,9 @@
 package repository;
 
 import annotations.Repo;
+import query.User;
 
 @Repo
-public interface UserRepository extends BaseRepository<String, Long> {
-    String getStringById(Long id);
+public interface UserRepository extends BaseRepository<User, Long> {
+    User getByNameAndSurname(String name, String surname);
 }
