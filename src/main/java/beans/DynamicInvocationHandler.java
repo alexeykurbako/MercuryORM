@@ -42,8 +42,8 @@ public class DynamicInvocationHandler implements InvocationHandler {
         Type primaryKeyType = genericTypes[1];
 
         SQLAssistent sqlAssistent = new SQLAssistent();
-        sqlAssistent.transformMethodNameToQueryParts(method, Arrays.asList(args));
-        sqlAssistent.buildSqlQuery(entityType, primaryKeyType,);
+
+        sqlAssistent.buildSqlQuery(method, Arrays.asList(args));
         return "ssss";
     }
 

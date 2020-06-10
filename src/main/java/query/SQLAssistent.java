@@ -3,6 +3,7 @@ package query;
 import demo.src.DAO.query.exceptions.FieldNotFoundException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import query.enums.QueryType;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -12,13 +13,7 @@ import java.util.List;
 
 
 public class SQLAssistent<T> {
-    private enum QueryType {
-        SELECT, UPDATE, INSERT, DELETE
-    }
 
-    private enum SubselectType {
-        GROUP, SORT
-    }
 
     private String[] OPERATIONS = {"GET", "FIND", "UPDATE", "EDIT", "INSERT", "ADD", "DELETE", "REMOVE"};
 
@@ -79,6 +74,7 @@ public class SQLAssistent<T> {
         List<Pair<String, String>> queryParts = new ArrayList<>();
 
         String[] words = method.getName().split("(?=[A-Z])");
+
         Class returnType = method.getReturnType();
         QueryType queryType = defineQueryType(words[0]);
 
@@ -106,8 +102,21 @@ public class SQLAssistent<T> {
         return queryParts;
     }
 
-    public String buildSqlQuery() {
+    public String buildSelect(List<Pair<String, String>> queryParts, String table) {
+        StringBuilder query = new StringBuilder("SELECT * FROM ");
+        appendElement(query, table);
+        return query.toString();
+    }
 
+    public SqlQuery buildSqlQuery(Method method, List<Object> queryParams) {
+        List<Pair<String, String>> queryParts = transformMethodNameToQueryParts(method, queryParams);
+        String query = "";
+        Pair<String, String> queryTypeAndTable = queryParts.get(0);
+        if(queryTypeAndTable.getKey().equals("SELECT")) {
+            query = buildSelect(queryParts, queryTypeAndTable.getValue());
+        }
+        System.out.println(query);
+        return null;
     }
 
     //Generics: Long, User
