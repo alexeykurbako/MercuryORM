@@ -4,15 +4,17 @@ import org.apache.commons.lang3.tuple.Pair;
 import query.enums.QueryType;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 public class QueryShards {
     private QueryType type;
     private String tableName;
     private List<Pair<String, String>> subselects;
-    private List<Pair<String, String>> parameters;
+    private Map<String, Object> parameters;
     private Class returningType;
 
-    public QueryShards(QueryType type, String tableName, List<Pair<String, String>> subselects, List<Pair<String, String>> parameters, Class returningType) {
+    public QueryShards(QueryType type, String tableName, List<Pair<String, String>> subselects, Map<String, Object> parameters, Class returningType) {
         this.type = type;
         this.tableName = tableName;
         this.subselects = subselects;
@@ -47,11 +49,11 @@ public class QueryShards {
         this.subselects = subselects;
     }
 
-    public List<Pair<String, String>> getParameters() {
+    public Map<String, Object> getParameters() {
         return parameters;
     }
 
-    public void setParameters(List<Pair<String, String>> parameters) {
+    public void setParameters(Map<String, Object> parameters) {
         this.parameters = parameters;
     }
 
@@ -61,5 +63,33 @@ public class QueryShards {
 
     public void setReturningType(Class returningType) {
         this.returningType = returningType;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        QueryShards that = (QueryShards) o;
+        return type == that.type &&
+                Objects.equals(tableName, that.tableName) &&
+                Objects.equals(subselects, that.subselects) &&
+                Objects.equals(parameters, that.parameters) &&
+                Objects.equals(returningType, that.returningType);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, tableName, subselects, parameters, returningType);
+    }
+
+    @Override
+    public String toString() {
+        return "QueryShards{" +
+                "type=" + type +
+                ", tableName='" + tableName + '\'' +
+                ", subselects=" + subselects +
+                ", parameters=" + parameters +
+                ", returningType=" + returningType +
+                '}';
     }
 }

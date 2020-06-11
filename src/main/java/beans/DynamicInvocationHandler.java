@@ -15,8 +15,7 @@ public class DynamicInvocationHandler implements InvocationHandler {
 
 
     @Override
-    public Object invoke(Object proxy, Method method, Object[] args)
-            throws Throwable {
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
         Class[] interfaces = method.getDeclaringClass().getInterfaces();
         List<Class> baseRepositories = Arrays.stream(interfaces)

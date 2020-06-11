@@ -7,9 +7,13 @@ import query.enums.QueryType;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 
 public class SQLAssistent<T> {
@@ -70,18 +74,11 @@ public class SQLAssistent<T> {
         throw new RuntimeException("Operation doesn't exist");
     }
 
-    public List<Pair<String, String>> transformMethodNameToQueryParts(Method method, List<Object> queryParams) {
+    public List<Pair<String, String>> transformMethodNameToQueryParts(String[] words) {
         List<Pair<String, String>> queryParts = new ArrayList<>();
-
-        String[] words = method.getName().split("(?=[A-Z])");
-
-        Class returnType = method.getReturnType();
-        QueryType queryType = defineQueryType(words[0]);
 
 //        Field[] existingEntityFields = entityType.getFields();
 //        queryParts.put(type.name(), entityType.getName());
-
-        queryParts.add(new ImmutablePair<>(queryType.name(), returnType.getSimpleName()));
         if (words.length > 2) {
             for (int i = 1; i < words.length; i++) {
                 String part = words[i];
@@ -108,12 +105,42 @@ public class SQLAssistent<T> {
         return query.toString();
     }
 
-    public SqlQuery buildSqlQuery(Method method, List<Object> queryParams) {
-        List<Pair<String, String>> queryParts = transformMethodNameToQueryParts(method, queryParams);
+    //TODO: move to separate service
+    private List<String> getParameterNames(Method method) {
+        Parameter[] parameters = method.getParameters();
+        List<String> parameterNames = new ArrayList<>();
+
+        for (Parameter parameter : parameters) {
+            if(!parameter.isNamePresent()) {
+                throw new IllegalArgumentException("Parameter names are not present!");
+            }
+
+            String parameterName = parameter.getName();
+            parameterNames.add(parameterName);
+        }
+
+        return parameterNames;
+    }
+
+    private Map<String, Object> mergeLists(List<String> keys, List<Object> values) {
+        return IntStream.range(0, keys.size()).boxed()
+                .collect(Collectors.toMap(keys::get, values::get));
+    }
+
+
+    public QueryShards buildSqlQuery(Method method, List<Object> queryParams) {
+        String[] words = method.getName().split("(?=[A-Z])");
+
+        Class returnType = method.getReturnType();
+        QueryType queryType = defineQueryType(words[0]);
+        List<Pair<String, String>> queryParts = transformMethodNameToQueryParts(words);
+        Map<String, Object> queryParameters = mergeLists(getParameterNames(method), queryParams);
+
         String query = "";
-        Pair<String, String> queryTypeAndTable = queryParts.get(0);
-        if(queryTypeAndTable.getKey().equals("SELECT")) {
-            query = buildSelect(queryParts, queryTypeAndTable.getValue());
+        switch (queryType) {
+            case SELECT:
+                query = buildSelect(queryParts, returnType.toString());
+                break;
         }
         System.out.println(query);
         return null;
