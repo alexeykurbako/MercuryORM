@@ -8,6 +8,7 @@ import query.enums.QueryType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -74,11 +75,27 @@ public class SQLAssistent<T> {
         throw new RuntimeException("Operation doesn't exist");
     }
 
-    public List<Pair<String, String>> transformMethodNameToQueryParts(String[] words) {
+    private String prettifyKey(String key) {
+        switch (key) {
+            case "get":
+            case "find":
+                key = "WHERE";
+        }
+        return key.toUpperCase();
+    }
+
+    private List<Pair<String, String>> prettifySubselectsNames(List<Pair<String, String>> queryParts) {
+        return queryParts.stream()
+                .map(pair -> new ImmutablePair<>(
+                        prettifyKey(pair.getKey()),
+                        pair.getValue()))
+                .collect(Collectors.toList());
+    }
+
+    private List<Pair<String, String>> transformMethodNameToQueryParts(String[] words) {
         List<Pair<String, String>> queryParts = new ArrayList<>();
 
 //        Field[] existingEntityFields = entityType.getFields();
-//        queryParts.put(type.name(), entityType.getName());
         if (words.length > 2) {
             for (int i = 1; i < words.length; i++) {
                 String part = words[i];
@@ -96,12 +113,27 @@ public class SQLAssistent<T> {
             }
         }
 
-        return queryParts;
+        return prettifySubselectsNames(queryParts);
     }
 
-    public String buildSelect(List<Pair<String, String>> queryParts, String table) {
+    public String buildSelect(QueryShards shards) {
         StringBuilder query = new StringBuilder("SELECT * FROM ");
-        appendElement(query, table);
+        appendElement(query, shards.getTableName());
+        List<Pair<String, String>> subselects = shards.getSubselects();
+        Map<String, Object> parameters = shards.getParameters();
+        if(shards.getSubselects() != null) {
+            IntStream.range(0, subselects.size())
+                .forEach(idx -> {
+                    String key = subselects.get(idx).getKey();
+                    if(idx > 0 && subselects.get(idx - 1).getKey().equals(key)) {
+                        key = "AND";
+                    }
+                    appendElement(query, key);
+                    appendElement(query, subselects.get(idx).getValue());
+                    appendElement(query, "=");
+                    appendElement(query, "'" + parameters.get("arg" + idx).toString() + "'");
+                });
+        }
         return query.toString();
     }
 
@@ -111,9 +143,9 @@ public class SQLAssistent<T> {
         List<String> parameterNames = new ArrayList<>();
 
         for (Parameter parameter : parameters) {
-            if(!parameter.isNamePresent()) {
-                throw new IllegalArgumentException("Parameter names are not present!");
-            }
+//            if(!parameter.isNamePresent()) {
+//                throw new IllegalArgumentException("Parameter names are not present!");
+//            }
 
             String parameterName = parameter.getName();
             parameterNames.add(parameterName);
@@ -127,32 +159,32 @@ public class SQLAssistent<T> {
                 .collect(Collectors.toMap(keys::get, values::get));
     }
 
-
-    public QueryShards buildSqlQuery(Method method, List<Object> queryParams) {
-        String[] words = method.getName().split("(?=[A-Z])");
-
-        Class returnType = method.getReturnType();
-        QueryType queryType = defineQueryType(words[0]);
-        List<Pair<String, String>> queryParts = transformMethodNameToQueryParts(words);
-        Map<String, Object> queryParameters = mergeLists(getParameterNames(method), queryParams);
-
+    private String buildQuery(QueryShards shards) {
         String query = "";
-        switch (queryType) {
+        switch (shards.getType()) {
             case SELECT:
-                query = buildSelect(queryParts, returnType.toString());
+                query = buildSelect(shards);
                 break;
         }
-        System.out.println(query);
-        return null;
+        return query;
     }
 
-    //Generics: Long, User
-//User find User By  Id Group By Date Sort By Age(Long Id);
-//SELECT: USER
-//WHERE: ID
-//GROUP: DATE
-//SORT: AGE
-//"SELECT user_id,login,email,password,money,role,is_locked FROM totalizator.user WHERE user_id = ? GROUP BY date SORT BY age";
+    public String buildSqlQuery(Type entityType, Method method, List<Object> queryParams) {
+        String[] words = method.getName().split("(?=[A-Z])");
 
+        QueryType queryType = defineQueryType(words[0]);
+        List<Pair<String, String>> subselects = transformMethodNameToQueryParts(words);
+        Map<String, Object> queryParameters = mergeLists(getParameterNames(method), queryParams);
+        Class returnType = method.getReturnType();
 
+        QueryShards shards = new QueryShards(
+                queryType,
+                entityType.getTypeName().substring(entityType.getTypeName().lastIndexOf('.') + 1),
+                subselects,
+                queryParameters,
+                returnType
+                );
+
+        return buildQuery(shards);
+    }
 }

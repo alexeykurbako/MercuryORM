@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 
 public class DynamicInvocationHandler implements InvocationHandler {
 
-
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
@@ -23,7 +22,7 @@ public class DynamicInvocationHandler implements InvocationHandler {
                 .collect(Collectors.toList());
 
         if (baseRepositories.size() == 0) {
-            throw new RuntimeException("don't implement BaseRepository");
+            throw new RuntimeException(" BaseRepository isn't implemented");
         }
 
         Class base = baseRepositories.get(0);
@@ -42,7 +41,7 @@ public class DynamicInvocationHandler implements InvocationHandler {
 
         SQLAssistent sqlAssistent = new SQLAssistent();
 
-        sqlAssistent.buildSqlQuery(method, Arrays.asList(args));
+        sqlAssistent.buildSqlQuery(entityType, method, Arrays.asList(args));
         return "ssss";
     }
 
